@@ -1,0 +1,28 @@
+{
+    "name": "abetter/image",
+    "description": "A Better Laravel Image toolkit, for exceptionally fast web applications.",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Johan Sjöland",
+            "email": "johan@sjoland.com"
+        }
+    ],
+    "require": {
+	},
+	"autoload": {
+		"psr-4": {
+			"ABetter\\Image\\": "src/"
+		},
+		"files": [
+			"src/helpers.php"
+		]
+	},
+	"extra": {
+        "laravel": {
+            "providers": [
+                "ABetter\\Image\\ServiceProvider"
+            ]
+        }
+    }
+}
