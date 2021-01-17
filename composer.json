@@ -22,7 +22,8 @@
 	"extra": {
         "laravel": {
             "providers": [
-                "ABetter\\Image\\ServiceProvider"
+                "ABetter\\Image\\ServiceProvider",
+				"ABetter\\Image\\BladeServiceProvider"
             ]
         }
     }
