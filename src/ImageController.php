@@ -16,6 +16,8 @@ class ImageController extends BaseController {
 			'style' => $style,
 		];
 
+		/*
+
 		// Parse
 		$this->image['ext'] = pathinfo($this->image['path'],PATHINFO_EXTENSION);
 		$this->image['name'] = pathinfo($this->image['path'],PATHINFO_FILENAME);
@@ -47,10 +49,13 @@ class ImageController extends BaseController {
 		];
 
 		return response()->file($this->image['target'], $this->image['headers']);
+		*/
 
     }
 
 	// ---
+
+	/*
 
 	public function imageFileSearch($image,$found=NULL) {
 		$dir = dirname(public_path().$image['path']);
@@ -69,5 +74,6 @@ class ImageController extends BaseController {
 		return \_imageMagick($image['source'],$image['target'],$image['style']);
 	}
 
+	*/
 
 }
