@@ -162,7 +162,7 @@ class Image {
 	// ----
 
 	public static function imagick($source,$target,$type,$style) {
-		if (!is_file($source)) return NULL;
+		if (!is_file($source) || preg_match('/\.error/',$source)) return NULL;
 		try {
 			$imagick = new Imagick($source);
 			self::imagickResize($imagick,$style);
@@ -187,7 +187,7 @@ class Image {
 	}
 
 	public static function imagickColor($source,$color="") {
-		if (!is_file($source)) return NULL;
+		if (!is_file($source) || preg_match('/\.error/',$source)) return NULL;
 		try {
 			$imagick = new Imagick($source);
 			$imagick->scaleimage(1,1);
