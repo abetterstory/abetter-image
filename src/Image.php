@@ -121,7 +121,7 @@ class Image {
 		if (is_string($args[2]??NULL)) {
 			$opt['return'] = $args[2];
 		}
-		if (preg_match('/^pixsum|unsplash|pexels/i',$args[0]??"")) {
+		if (preg_match('/^(pixsum|pexels|unsplash)/',$args[0]??"")) {
 			$opt['pixsum'] = str_replace(['pixsum'],[''],$args[0]);
 			$opt['request'] = Pixsum::get($opt['pixsum']);
 		}
@@ -145,6 +145,7 @@ class Image {
 	// ----
 
 	public static function imagick($source,$target,$type,$style) {
+		if (!is_file($source)) return NULL;
 		try {
 			$imagick = new Imagick($source);
 			self::imagickResize($imagick,$style);
@@ -169,6 +170,7 @@ class Image {
 	}
 
 	public static function imagickColor($source,$color="") {
+		if (!is_file($source)) return NULL;
 		try {
 			$imagick = new Imagick($source);
 			$imagick->scaleimage(1,1);
