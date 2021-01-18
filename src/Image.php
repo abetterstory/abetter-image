@@ -3,6 +3,7 @@
 namespace ABetter\Image;
 
 use Imagick;
+use ABetter\Mockup\Pixsum;
 //use Illuminate\Database\Eloquent\Model AS BaseModel;
 
 class Image {
@@ -10,6 +11,7 @@ class Image {
 	public static $default = [
 		'storage' => 'cache/image',
 		'return' => 'public',
+		'pixsum' => NULL,
 		'request' => NULL,
 		'protocol' => NULL,
 		'domain' => NULL,
@@ -22,6 +24,7 @@ class Image {
 		'target' => NULL,
 		'process' => NULL,
 		'styles' => NULL,
+		'color' => NULL,
 	];
 
 	// ---
@@ -43,10 +46,19 @@ class Image {
 				);
 			}
 		}
+		$opt['color'] = self::color($opt);
 		$opt['is_source'] = (is_file($opt['source']));
 		$opt['is_target'] = (is_file($opt['target']));
+		if ($opt['return'] == 'object') return $opt;
 		if ($opt['return'] == 'public') return self::public($opt);
 		return (is_file($opt['target'])) ? $opt['target'] : NULL;
+	}
+
+	public static function color($opt) {
+		if (preg_match('/color\-([^.]{3,6})/',$opt['filename'],$match)) {
+			return "#".$match[1];
+		}
+		return self::imagickColor($opt['source']);
 	}
 
 	// ---
@@ -109,10 +121,14 @@ class Image {
 		if (is_string($args[2]??NULL)) {
 			$opt['return'] = $args[2];
 		}
+		if (preg_match('/^pixsum|unsplash|pexels/i',$args[0]??"")) {
+			$opt['pixsum'] = str_replace(['pixsum'],[''],$args[0]);
+			$opt['request'] = Pixsum::get($opt['pixsum']);
+		}
 		$opt['path'] = rtrim(pathinfo($opt['request'],PATHINFO_DIRNAME),'/').'/';
 		$opt['filename'] = pathinfo($opt['request'],PATHINFO_FILENAME);
 		$opt['type'] = pathinfo($opt['request'],PATHINFO_EXTENSION);
-		if (preg_match('/https?\:\/\//',$opt['request'])) {
+		if (preg_match('/^https?\:\/\//',$opt['request'])) {
 			$opt['domain'] = parse_url($opt['request'],PHP_URL_HOST);
 			$opt['protocol'] = parse_url($opt['request'],PHP_URL_SCHEME).'://';
 			$opt['path'] = rtrim(parse_url($opt['path'],PHP_URL_PATH),'/').'/';
@@ -129,23 +145,42 @@ class Image {
 	// ----
 
 	public static function imagick($source,$target,$type,$style) {
-		$imagick = new Imagick($source);
-		self::imagickResize($imagick,$style);
-		self::imagickFilter($imagick,$style);
-		if ($type == 'png' || $type == 'gif') {
-			$imagick->setImageCompression(Imagick::COMPRESSION_UNDEFINED);
-			$imagick->setImageCompressionQuality(0);
-		} else if ($type == 'jpg' || $type == 'jpeg') {
-			$imagick->setImageCompression(Imagick::COMPRESSION_JPEG);
-			$imagick->setImageCompressionQuality(70);
-			$imagick->setImageBackgroundColor($style['background']);
-			$imagick->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
-			$imagick = $imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+		try {
+			$imagick = new Imagick($source);
+			self::imagickResize($imagick,$style);
+			self::imagickFilter($imagick,$style);
+			if ($type == 'png' || $type == 'gif') {
+				$imagick->setImageCompression(Imagick::COMPRESSION_UNDEFINED);
+				$imagick->setImageCompressionQuality(0);
+			} else if ($type == 'jpg' || $type == 'jpeg') {
+				$imagick->setImageCompression(Imagick::COMPRESSION_JPEG);
+				$imagick->setImageCompressionQuality(70);
+				$imagick->setImageBackgroundColor($style['background']);
+				$imagick->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+				$imagick = $imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+			}
+			$imagick->stripImage();
+			$imagick->writeImage($target);
+			$imagick->clear();
+			return TRUE;
+		} catch(Exception $e) {
+			return FALSE;
 		}
-		$imagick->stripImage();
-		$imagick->writeImage($target);
-		$imagick->clear();
-		return TRUE;
+	}
+
+	public static function imagickColor($source,$color="") {
+		try {
+			$imagick = new Imagick($source);
+			$imagick->scaleimage(1,1);
+			if ($pixel = ($pixels = $imagick->getimagehistogram()) ? reset($pixels) : NULL) {
+				$rgb = $pixel->getcolor();
+				$color = sprintf('#%02X%02X%02X',$rgb['r'],$rgb['g'],$rgb['b']);
+			}
+			$imagick->clear();
+			return $color;
+		} catch(Exception $e) {
+			return FALSE;
+		}
 	}
 
 	public static function imagickResize($imagick,$style) {

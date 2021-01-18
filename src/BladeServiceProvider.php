@@ -14,6 +14,9 @@ class BladeServiceProvider extends ServiceProvider {
 			return "<?php echo _image($expression); ?>";
         });
 
+		// Component
+		Blade::component('image', ImageComponent::class);
+
     }
 
     public function register() {

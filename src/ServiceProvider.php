@@ -10,6 +10,12 @@ class ServiceProvider extends BaseServiceProvider {
 
 		$this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
+		$this->loadViewsFrom(__DIR__.'/../views', 'abetter-image');
+
+		$this->loadViewComponentsAs('', [
+			ImageComponent::class,
+	    ]);
+
     }
 
     public function register() {
