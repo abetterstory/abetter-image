@@ -12,8 +12,8 @@ $Ximage->lazy = (empty($attributes['lazy'])) ? '--lazy' : '';
 $Ximage->class = $attributes['class'] ?? "";
 
 $Ximage->vars_default = [
-	'--color' => $Ximage->color,
-	'--height' => $Ximage->dimensions['height_percent'],
+	'--color' => $Ximage->color??"",
+	'--height' => $Ximage->dimensions['height_percent']??"",
 	'--fadein' => '1.0s',
 	'--overlay' => '#220',
 	'--shade' => '0.0',
