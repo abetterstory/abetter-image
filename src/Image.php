@@ -10,6 +10,7 @@ class Image {
 
 	public static $default = [
 		'storage' => 'cache/image',
+		'publicbase' => '/cache/image/',
 		'return' => 'src',
 		'src' => NULL,
 		'file' => NULL,
@@ -97,7 +98,7 @@ class Image {
 	}
 
 	public static function public($opt=[]) {
-		return $opt['path'].$opt['filename'].'.'.$opt['type'];
+		return ($e = explode($opt['publicbase'],$opt['target'])) ? $opt['publicbase'].end($e) : "";
 	}
 
 	// ---
