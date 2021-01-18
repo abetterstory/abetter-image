@@ -15,24 +15,24 @@ class ImageController extends BaseController {
 			'expire' => '1 year',
 			'path' => '/'.trim($path,'/'),
 			'style' => $style,
-			'location' => NULL,
-			'public' => NULL,
+			'file' => NULL,
+			'src' => NULL,
 		];
 
-		$this->image['location'] = Image::get(
+		$this->image['file'] = Image::get(
 			$this->image['path'],
 			$this->image['style'],
-			'location'
+			'file'
 		);
 
-		if (!is_file($this->image['location'])) {
+		if (!is_file($this->image['file'])) {
 			return abort(404);
 		}
 
 		$GLOBALS['HEADERS']['expire'] = $this->image['expire'];
 		$GLOBALS['HEADERS']['modified'] = @filemtime($this->image['location']);
 
-		return response()->file($this->image['location']);
+		return response()->file($this->image['file']);
 
 	}
 

@@ -10,7 +10,9 @@ class Image {
 
 	public static $default = [
 		'storage' => 'cache/image',
-		'return' => 'public',
+		'return' => 'src',
+		'src' => NULL,
+		'file' => NULL,
 		'pixsum' => NULL,
 		'request' => NULL,
 		'protocol' => NULL,
@@ -25,6 +27,9 @@ class Image {
 		'process' => NULL,
 		'styles' => NULL,
 		'color' => NULL,
+		'dimensions' => NULL,
+		'vars' => NULL,
+		'ref' => NULL,
 	];
 
 	// ---
@@ -46,12 +51,13 @@ class Image {
 				);
 			}
 		}
+		if ($opt['return'] == 'src') return self::public($opt);
+		if ($opt['return'] == 'file') return $opt['target'];
+		$opt['src'] = self::public($opt);
+		$opt['file'] = $opt['target'];
 		$opt['color'] = self::color($opt);
-		$opt['is_source'] = (is_file($opt['source']));
-		$opt['is_target'] = (is_file($opt['target']));
-		if ($opt['return'] == 'object') return $opt;
-		if ($opt['return'] == 'public') return self::public($opt);
-		return (is_file($opt['target'])) ? $opt['target'] : NULL;
+		$opt['dimensions'] = self::dimensions($opt);
+		return $opt;
 	}
 
 	public static function color($opt) {
@@ -59,6 +65,17 @@ class Image {
 			return "#".$match[1];
 		}
 		return self::imagickColor($opt['source']);
+	}
+
+	public static function dimensions($opt) {
+		if (!is_file($opt['target'])) return [];
+		$get = @getimagesize($opt['target']);
+		$dim = ['width' => ($get[0]??0), 'height' => ($get[1]??0)];
+		$dim['width_ratio'] = round($dim['width'] / $dim['height'],3);
+		$dim['width_percent'] = round(100 * $dim['width_ratio']).'%';
+		$dim['height_ratio'] = round($dim['height'] / $dim['width'],3);
+		$dim['height_percent'] = round(100 * $dim['height_ratio']).'%';
+		return $dim;
 	}
 
 	// ---
