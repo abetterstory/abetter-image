@@ -8,39 +8,46 @@ $Ximage = (object) Image::get(
 	'object'
 );
 
-$Ximage->lazy = (empty($attributes['lazy'])) ? '--lazy' : '';
-$Ximage->class = $attributes['class'] ?? "";
-
-$Ximage->vars_default = [
-	'--color' => $Ximage->color??"",
-	'--height' => $Ximage->dimensions['height_percent']??"",
-	'--fadein' => '1.0s',
+$Ximage->defaults = [
+	'background-color' => $Ximage->color ?? '',
+	'--color' => $Ximage->color ?? '',
+	'--height' => $Ximage->dimensions['height_percent'] ?? '',
+	'--fadein' => '0.75s',
 	'--overlay' => '#220',
-	'--shade' => '0.0',
-	'--vignette' => '0.0',
-	'--fade' => '0.0',
+	'--shade' => '0.2',
+	'--fade' => '0.4',
+	'--vignette' => '1',
 ];
 
-$Ximage->vars = "";
-foreach ($Ximage->vars_default AS $key => $val) {
-	$Ximage->vars .= "{$key}:{$val};";
+$Ximage->style = "";
+$Ximage->class = "";
+$Ximage->lazy = (empty($attributes['lazy'])) ? 'lazy' : '';
+$Ximage->classes = (string) $attributes['class'] ?? "";
+$Ximage->classvars = [];
+foreach(explode(' ',$Ximage->classes) AS $prop) {
+	$prop = explode(':',$prop); if (empty($prop[0])) continue;
+	$Ximage->classvars[$prop[0]] = $prop[1] ?? $Ximage->defaults[$prop[0]] ?? "";
+};
+$Ximage->vars = array_merge($Ximage->defaults,$Ximage->classvars);
+foreach ($Ximage->vars AS $key => $val) {
+	$Ximage->style .= "{$key}:{$val};";
+	$Ximage->class .= ((strpos($Ximage->classes,$key) !== false) ? " {$key}" : "");
 }
 
 @endphp
 
-<div class="component--x-image --container {{ $Ximage->class }}" style="{{ $Ximage->vars }}">
-	<div class="--shade"></div>
-	<div class="--overlay"></div>
-	<img class="--image" {{ ($Ximage->lazy) ? 'data-' : '' }}src="{{ $Ximage->src }}" {{ $Ximage->lazy }} />
+<div class="component--x-image --x-container {{ $Ximage->class }}" style="{{ $Ximage->style }}">
+	<img class="--x-image" {{ ($Ximage->lazy) ? 'data-' : '' }}src="{{ $Ximage->src }}" {{ $Ximage->lazy }} />
+	<div class="--x-overlay"><div class="--x-shade"></div></div>
 
 <x-script>
 var $w = window, $d = document;
 $w.ximglh = function(e) {
-    var $e = $d.querySelectorAll('[data-src][--lazy]');
+    var $e = $d.querySelectorAll('[data-src][lazy]'); // IE breaks with '--';
     for (var i = 0; i < $e.length; i++) {
-        var boundingClientRect = $e[i].getBoundingClientRect();
-        if ($e[i].hasAttribute('data-src') && boundingClientRect.top < $w.innerHeight) {
-            $e[i].setAttribute('src', $e[i].getAttribute('data-src'));
+        var rect = $e[i].getBoundingClientRect();
+        if ($e[i].hasAttribute('data-src') && rect.top < $w.innerHeight) {
+            $e[i].setAttribute('src', $e[i].getAttribute('data-src')+'?'+new Date().getTime());
 			$e[i].removeAttribute('data-src');
         };
 		$e[i].onload = function(e){
@@ -58,64 +65,85 @@ $w.addEventListener('resize', $w.ximglh);
 	display: block;
 	position: relative;
 	width: 100%;
-	background-color: var(--color);
 	overflow: hidden;
 	&:after {
     	content: '';
 		display: block;
 		position: relative;
+		padding-bottom: 56%; //IE
     	padding-bottom: var(--height);
 	}
-	.\--image {
+	.\--x-image {
 		display: block;
 		position: absolute;
-		z-index: 0;
 		margin: 0;
 		padding: 0;
     	left: 0;
     	top: 0;
     	width: 100%;
-    	height: 100%;
-		object-fit: cover;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 		opacity: 0;
 	}
-	.\--shade,
-	.\--overlay {
+	// ---
+	.\--x-overlay {
 		display: block;
 		position: absolute;
-		z-index: 2;
 		left: 0;
 		top: 0;
 		width: 100%;
 		height: 100%;
 		opacity: 0;
-		mix-blend-mode: multiply;
 		&:before,&:after {
 			content: '';
 			position: absolute;
-			z-index: 2;
 			left: 0;
 			top: 0;
 			width: 100%;
 			height: 100%;
-			mix-blend-mode: multiply;
+			opacity: 0;
+		}
+		.\--x-shade {
+			display: block;
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			opacity: 0;
 		}
 	}
-	&.\--shade .\--shade:before {
+	// ---
+	&.\--shade .\--x-shade {
+		opacity: 0; //IE
 		opacity: var(--shade);
-		background-color: var(--overlay);
+		background: var(--overlay);
 	}
-	&.\--vignette .\--overlay:before {
+	&.\--vignette .\--x-overlay:before {
+		opacity: 0; //IE
 		opacity: var(--vignette);
 		background: radial-gradient(circle, transparent 50%, var(--overlay) 150%);
 	}
-	&.\--fade .\--overlay:after {
+	&.\--fade .\--x-overlay:after {
+		opacity: 0; //IE
 		opacity: var(--fade);
 		background: linear-gradient(var(--overlay), transparent 80px, transparent 20%, transparent 80%, var(--overlay));
 	}
+	&.\--multiply {
+		.\--x-overlay,
+		.\--x-overlay:before,
+		.\--x-overlay:after,
+		.\--x-shade {
+			mix-blend-mode: multiply;
+		}
+	}
+	// ---
 	&.\--ready {
-		.\--image,.\--shade,.\--overlay {
+		.\--x-image,
+		.\--x-overlay {
 			opacity: 1;
+			transition: opacity 0.75s linear;
 			transition: opacity var(--fadein) linear;
 		}
 	}
