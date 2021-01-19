@@ -21,7 +21,7 @@ $Ximage->defaults = [
 
 $Ximage->style = "";
 $Ximage->class = "";
-$Ximage->lazy = (empty($attributes['lazy'])) ? 'lazy' : '';
+$Ximage->lazy = (empty($attributes['lazy'])) ? 'x-lazy' : '';
 $Ximage->classes = (string) $attributes['class'] ?? "";
 $Ximage->classvars = [];
 foreach(explode(' ',$Ximage->classes) AS $prop) {
@@ -41,23 +41,31 @@ foreach ($Ximage->vars AS $key => $val) {
 	<div class="--x-overlay"><div class="--x-shade"></div></div>
 
 <x-script>
-var $w = window, $d = document;
-$w.ximglh = function(e) {
-    var $e = $d.querySelectorAll('[data-src][lazy]'); // IE breaks with '--';
-    for (var i = 0; i < $e.length; i++) {
-        var rect = $e[i].getBoundingClientRect();
-        if ($e[i].hasAttribute('data-src') && rect.top < $w.innerHeight) {
-            $e[i].setAttribute('src', $e[i].getAttribute('data-src')+'?'+new Date().getTime());
-			$e[i].removeAttribute('data-src');
-        };
-		$e[i].onload = function(e){
-			e.target.parentNode.classList.add('--ready');
-		};
-    };
-};
-$w.addEventListener('scroll', $w.ximglh);
-$w.addEventListener('load', $w.ximglh);
-$w.addEventListener('resize', $w.ximglh);
+(function(){
+
+	var $this = this,
+		$w = window,
+		$d = document;
+
+	$this.ximglh = function(e) {
+	    var $e = $d.querySelectorAll('[data-src][x-lazy]'); // IE breaks with '--';
+	    for (var i = 0; i < $e.length; i++) {
+	        var rect = $e[i].getBoundingClientRect();
+	        if ($e[i].hasAttribute('data-src') && rect.top < $w.innerHeight) {
+	            $e[i].setAttribute('src', $e[i].getAttribute('data-src')+'?'+new Date().getTime());
+				$e[i].removeAttribute('data-src');
+	        };
+			$e[i].onload = function(e){
+				e.target.parentNode.classList.add('--ready');
+			};
+	    };
+	};
+
+	$w.addEventListener('scroll', $this.ximglh);
+	$w.addEventListener('load', $this.ximglh);
+	$w.addEventListener('resize', $this.ximglh);
+
+})();
 </x-script>
 
 <x-style>
@@ -70,7 +78,7 @@ $w.addEventListener('resize', $w.ximglh);
     	content: '';
 		display: block;
 		position: relative;
-		padding-bottom: 56%; //IE
+		padding-bottom: 0; //IE11
     	padding-bottom: var(--height);
 	}
 	.\--x-image {
@@ -82,11 +90,12 @@ $w.addEventListener('resize', $w.ximglh);
     	top: 0;
     	width: 100%;
 		height: 100%;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
 		object-fit: cover;
 		opacity: 0;
+		@media all and (-ms-high-contrast:none) {
+			position: relative; //IE11
+			height: auto; //IE11
+		}
 	}
 	// ---
 	.\--x-overlay {
@@ -118,17 +127,17 @@ $w.addEventListener('resize', $w.ximglh);
 	}
 	// ---
 	&.\--shade .\--x-shade {
-		opacity: 0; //IE
+		opacity: 0; //IE11
 		opacity: var(--shade);
 		background: var(--overlay);
 	}
 	&.\--vignette .\--x-overlay:before {
-		opacity: 0; //IE
+		opacity: 0; //IE11
 		opacity: var(--vignette);
 		background: radial-gradient(circle, transparent 50%, var(--overlay) 150%);
 	}
 	&.\--fade .\--x-overlay:after {
-		opacity: 0; //IE
+		opacity: 0; //IE11
 		opacity: var(--fade);
 		background: linear-gradient(var(--overlay), transparent 80px, transparent 20%, transparent 80%, var(--overlay));
 	}
