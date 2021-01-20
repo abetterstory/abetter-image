@@ -14,6 +14,7 @@ class ServiceProvider extends BaseServiceProvider {
 
 		$this->loadViewComponentsAs('', [
 			ImageComponent::class,
+			BackgroundComponent::class,
 	    ]);
 
     }

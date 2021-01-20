@@ -16,6 +16,7 @@ class BladeServiceProvider extends ServiceProvider {
 
 		// Component
 		Blade::component('image', ImageComponent::class);
+		Blade::component('background', BackgroundComponent::class);
 
     }
 

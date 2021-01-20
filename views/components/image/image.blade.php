@@ -4,7 +4,7 @@ use ABetter\Image\Image;
 
 $Ximage = (object) Image::get(
 	$attributes['src'],
-	$attributes['style'],
+	$attributes['size'],
 	'object'
 );
 
@@ -12,16 +12,20 @@ $Ximage->defaults = [
 	'background-color' => $Ximage->color ?? '',
 	'--color' => $Ximage->color ?? '',
 	'--height' => $Ximage->dimensions['height_percent'] ?? '',
+	'--x' => '50%',
+	'--y' => '50%',
 	'--fadein' => '0.75s',
 	'--overlay' => '#220',
 	'--shade' => '0.2',
-	'--fade' => '0.4',
+	'--fade' => '0.3',
 	'--vignette' => '1',
 ];
 
-$Ximage->style = "";
+$Ximage->id = (string) $attributes['id'] ?? "";
+$Ximage->style = (string) $attributes['style'] ?? "";
+$Ximage->cover = (isset($attributes['cover'])) ? 'is-cover' : '';
+$Ximage->lazy = (empty($attributes['lazy'])) ? 'is-lazy' : '';
 $Ximage->class = "";
-$Ximage->lazy = (empty($attributes['lazy'])) ? 'x-lazy' : '';
 $Ximage->classes = (string) $attributes['class'] ?? "";
 $Ximage->classvars = [];
 foreach(explode(' ',$Ximage->classes) AS $prop) {
@@ -36,8 +40,12 @@ foreach ($Ximage->vars AS $key => $val) {
 
 @endphp
 
-<div class="component--x-image --x-container {{ $Ximage->class }}" style="{{ $Ximage->style }}">
-	<img class="--x-image" {{ ($Ximage->lazy) ? 'data-' : '' }}src="{{ $Ximage->src }}" {{ $Ximage->lazy }} />
+<div class="component--x-image {{ $Ximage->cover }} {{ $Ximage->class }}" style="{{ $Ximage->style }}" @if($Ximage->id) id="{{ $Ximage->id }}" @endif>
+	@if($Ximage->cover)
+		<div class="--x-image {{ $Ximage->lazy }}" {{ ($Ximage->lazy)?'data-':'' }}src="{{ $Ximage->src }}"></div>
+	@else
+		<img class="--x-image {{ $Ximage->lazy }}" {{ ($Ximage->lazy)?'data-':'' }}src="{{ $Ximage->src }}" />
+	@endif
 	<div class="--x-overlay"><div class="--x-shade"></div></div>
 
 <x-script>
@@ -47,18 +55,30 @@ foreach ($Ximage->vars AS $key => $val) {
 		$w = window,
 		$d = document;
 
-	$this.ximglh = function(e) {
-	    var $e = $d.querySelectorAll('[data-src][x-lazy]'); // IE breaks with '--';
-	    for (var i = 0; i < $e.length; i++) {
-	        var rect = $e[i].getBoundingClientRect();
-	        if ($e[i].hasAttribute('data-src') && rect.top < $w.innerHeight) {
-	            $e[i].setAttribute('src', $e[i].getAttribute('data-src')+'?'+new Date().getTime());
-				$e[i].removeAttribute('data-src');
-	        };
-			$e[i].onload = function(e){
-				e.target.parentNode.classList.add('--ready');
+	$this.ximglh = function() {
+
+	    var $els = $d.querySelectorAll('.is-lazy[data-src]'); // IE breaks with '--';
+		[].forEach.call($els,function($el){
+
+	        var rect = $el.getBoundingClientRect();
+			var src = $el.getAttribute('data-src'); //+'?'+new Date().getTime();
+			var $img = new Image();
+
+			$img.onload = function(e){
+				if ($el.tagName == 'IMG') {
+					$el.setAttribute('src', src);
+				} else {
+					$el.setAttribute('style', 'background-image:url('+src+');');
+				}
+				$el.parentNode.classList.add('--ready');
 			};
-	    };
+
+	        if ($el.hasAttribute('data-src') && rect.top < $w.innerHeight) {
+				$img.src = src;
+				$el.removeAttribute('data-src');
+	        };
+
+	    });
 	};
 
 	$w.addEventListener('scroll', $this.ximglh);
@@ -75,11 +95,20 @@ foreach ($Ximage->vars AS $key => $val) {
 	width: 100%;
 	overflow: hidden;
 	&:after {
-    	content: '';
+		content: '';
 		display: block;
 		position: relative;
-		padding-bottom: 0; //IE11
-    	padding-bottom: var(--height);
+		padding-bottom: var(--height);
+		@media all and (-ms-high-contrast:none) {
+			padding-bottom: 0; //IE11
+			content: none; //IE11
+		}
+	}
+	&.is-cover {
+		&:after {
+			content: none;
+			padding-bottom: 0;
+		}
 	}
 	.\--x-image {
 		display: block;
@@ -90,11 +119,13 @@ foreach ($Ximage->vars AS $key => $val) {
     	top: 0;
     	width: 100%;
 		height: 100%;
-		object-fit: cover;
 		opacity: 0;
+		background-size: cover;
+		background-repeat: no-repeat;
+		background-position: var(--x) var(--y);
 		@media all and (-ms-high-contrast:none) {
 			position: relative; //IE11
-			height: auto; //IE11
+			background-position: 50% 50%; //IE11
 		}
 	}
 	// ---
@@ -139,7 +170,8 @@ foreach ($Ximage->vars AS $key => $val) {
 	&.\--fade .\--x-overlay:after {
 		opacity: 0; //IE11
 		opacity: var(--fade);
-		background: linear-gradient(var(--overlay), transparent 80px, transparent 20%, transparent 80%, var(--overlay));
+		height: 120%;
+		background: linear-gradient(var(--overlay), transparent 100px, transparent 20%, transparent 60%, var(--overlay));
 	}
 	&.\--multiply {
 		.\--x-overlay,
@@ -154,7 +186,7 @@ foreach ($Ximage->vars AS $key => $val) {
 		.\--x-image,
 		.\--x-overlay {
 			opacity: 1;
-			transition: opacity 0.75s linear;
+			transition: opacity 0.75s linear; //IE11
 			transition: opacity var(--fadein) linear;
 		}
 	}
