@@ -8,10 +8,12 @@ use ABetter\Mockup\Pixsum;
 
 class Image {
 
+	public static $Imagick;
+
 	public static $default = [
-		'storage' => 'cache/image',
-		'publicbase' => '/cache/image/',
 		'return' => 'src',
+		'storage' => 'cache/image',
+		'service' => NULL,
 		'src' => NULL,
 		'file' => NULL,
 		'pixsum' => NULL,
@@ -52,8 +54,10 @@ class Image {
 				);
 			}
 		}
-		if ($opt['return'] == 'src') return self::public($opt);
 		if ($opt['return'] == 'file') return $opt['target'];
+		if ($opt['return'] == 'src') return self::public($opt);
+		if ($opt['return'] == 'service') return self::service($opt);
+		$opt['service'] = self::service($opt);
 		$opt['src'] = self::public($opt);
 		$opt['file'] = $opt['target'];
 		$opt['color'] = self::color($opt);
@@ -98,7 +102,11 @@ class Image {
 	}
 
 	public static function public($opt=[]) {
-		return ($e = explode($opt['publicbase'],$opt['target'])) ? $opt['publicbase'].end($e) : "";
+		return str_replace(storage_path(),'',$opt['target']);
+	}
+
+	public static function service($opt=[]) {
+		return '/_image/x'.$opt['path'].$opt['filename'].'.'.$opt['type'];
 	}
 
 	// ---
@@ -150,7 +158,7 @@ class Image {
 			$opt['domain'] = parse_url($opt['request'],PHP_URL_HOST);
 			$opt['protocol'] = parse_url($opt['request'],PHP_URL_SCHEME).'://';
 			$opt['path'] = rtrim(parse_url($opt['path'],PHP_URL_PATH),'/').'/';
-			$opt['remote'] = ($opt['domain'] !== parse_url(env('APP_URL'),PHP_URL_HOST)) ? $opt['protocol'].$opt['domain'].$opt['path'] : FALSE;
+			$opt['remote'] = ($opt['domain'] !== parse_url(env('APP_URL'),PHP_URL_HOST)) ? $opt['request'] : FALSE;
 			if (!$opt['type']) $opt['type'] = self::format($opt['remote'],TRUE);
 			if (!$opt['remote']) $opt['domain'] = "";
 		}
@@ -165,7 +173,7 @@ class Image {
 	public static function imagick($source,$target,$type,$style) {
 		if (!is_file($source) || preg_match('/\.error/',$source)) return NULL;
 		try {
-			$imagick = new Imagick($source);
+			$imagick = self::$Imagick ?? new Imagick($source);
 			self::imagickResize($imagick,$style);
 			self::imagickFilter($imagick,$style);
 			if ($type == 'png' || $type == 'gif') {
@@ -190,7 +198,7 @@ class Image {
 	public static function imagickColor($source,$color="") {
 		if (!is_file($source) || preg_match('/\.error/',$source)) return NULL;
 		try {
-			$imagick = new Imagick($source);
+			$imagick = self::$Imagick ?? new Imagick($source);
 			$imagick->scaleimage(1,1);
 			if ($pixel = ($pixels = $imagick->getimagehistogram()) ? reset($pixels) : NULL) {
 				$rgb = $pixel->getcolor();

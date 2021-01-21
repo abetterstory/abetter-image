@@ -13,7 +13,7 @@ class ImageController extends BaseController {
 
 		$this->image = [
 			'expire' => '1 year',
-			'path' => '/'.trim($path,'/'),
+			'path' => str_replace('/http','http',('/'.trim($path,'/'))),
 			'style' => $style,
 			'file' => NULL,
 			'src' => NULL,
