@@ -60,7 +60,6 @@ uksort($Ximage->vars, function($a,$b){
 foreach ($Ximage->vars AS $key => $val) {
 	$Ximage->xstyle .= ($val = trim($val,';')) ? "{$key}:{$val}; " : "";
 	if (strpos($Ximage->props,$key) === FALSE) continue;
-	if (!in_array($key,['--fade','--shade','--vignette'])) continue;
 	$Ximage->xclass .= " {$key}";
 }
 
@@ -74,14 +73,17 @@ if ($Ximage->responsive && !empty($Ximage->service)) {
 	}
 }
 
-$Ximage->xattr = ($Ximage->xset && $Ximage->lazy) ? 'set="'.$Ximage->xset.'"' : 'src="'.$Ximage->src.'"';
-$Ximage->xattr = ($Ximage->lazy) ? "x-{$Ximage->xattr}" : $Ximage->xattr;
+// ---
 
-if ($Ximage->cover && !$Ximage->lazy) {
+if ($Ximage->responsive) {
+	$Ximage->xattr = 'x-set="'.$Ximage->xset.'"';
+} else if ($Ximage->lazy) {
+	$Ximage->xattr = 'x-src="'.$Ximage->src.'"';
+} else if ($Ximage->cover) {
 	$Ximage->xattr = 'style="background-image:url('.$Ximage->src.');"';
+} else {
+	$Ximage->xattr = 'src="'.$Ximage->src.'"';
 }
-
-//dump($Ximage);
 
 @endphp
 
@@ -98,26 +100,26 @@ if ($Ximage->cover && !$Ximage->lazy) {
 
 	var self = this, $w = window, $d = document;
 
-	self.items = [];
+	self.xItems = [];
 
-	self.xImgs = function() {
-	    if (!self.items.length) {
+	$w.xImgs = function() {
+	    if (!$w.xItems.length) {
 			var q = $d.querySelectorAll('.component--x-image > [x-image]'); // IE breaks with '--';
 			[].forEach.call(q,function(el,i){
-				self.items[i] = {};
-				self.items[i].el = el;
-				self.items[i].opt = self.getOpt(el);
-				self.items[i].src = el.getAttribute('src');
+				$w.xItems[i] = {};
+				$w.xItems[i].el = el;
+				$w.xItems[i].opt = self.getOpt(el);
+				$w.xItems[i].src = el.getAttribute('src');
 			});
 		}
-		[].forEach.call(self.items,function(item,i){
-			self.xImg(item,i);
+		[].forEach.call($w.xItems,function(item,i){
+			$w.xImg(item,i);
 		});
 	};
 
-	self.xImg = function(item,i) {
+	$w.xImg = function(item,i) {
 
-		var item = (item) ? item : self.items[i],
+		var item = (item) ? item : $w.xItems[i],
 			el = item.el,
 			rect = el.getBoundingClientRect();
 
@@ -137,7 +139,7 @@ if ($Ximage->cover && !$Ximage->lazy) {
 					res = opt.size[s].src;
 				}
 			}
-			if (res != self.items[i].src) {
+			if (res != $w.xItems[i].src) {
 				el.setAttribute('x-src',res);
 			};
 		};
@@ -148,14 +150,14 @@ if ($Ximage->cover && !$Ximage->lazy) {
 
 		var src = el.getAttribute('x-src');
 
-		if (src != self.items[i].src) {
+		if (src != $w.xItems[i].src) {
 			if (el.tagName == 'IMG') {
 				el.setAttribute('src', src);
 				el.onload = function(e){
 					el.parentNode.classList.add('--ready');
 					el.removeAttribute('x-src');
 				};
-				self.items[i].src = src;
+				$w.xItems[i].src = src;
 			} else {
 				var img = new Image();
 				img.src = src;
@@ -164,11 +166,13 @@ if ($Ximage->cover && !$Ximage->lazy) {
 					el.parentNode.classList.add('--ready');
 					el.removeAttribute('x-src');
 				};
-				self.items[i].src = src;
+				$w.xItems[i].src = src;
 			};
 		};
 
 	};
+
+	// ---
 
 	self.getOpt = function(el) {
 		var opt = {};
@@ -187,26 +191,30 @@ if ($Ximage->cover && !$Ximage->lazy) {
 		return opt;
 	};
 
-	$w.addEventListener('scroll', self.xImgs);
-	$w.addEventListener('load', self.xImgs);
-	$w.addEventListener('resize', self.xImgs);
+	$w.addEventListener('scroll', $w.xImgs);
+	$w.addEventListener('load', $w.xImgs);
+	$w.addEventListener('resize', $w.xImgs);
 
 })();
 </x-script>
 
 <x-style>
 .component--x-image {
-	display: block;
 	display: flex;
+	flex-direction: row;
 	align-items: center;
 	justify-content: center;
 	position: relative;
 	width: 100%;
 	overflow: hidden;
+	@media all and (-ms-high-contrast:none) {
+		display: block; //IE11
+	}
 	// ---
 	[x-image] {
 		opacity: 0;
 		display: block;
+		flex: 1;
 		position: relative;
 		margin: 0;
 		padding: 0;
@@ -239,6 +247,7 @@ if ($Ximage->cover && !$Ximage->lazy) {
 		}
 	}
 	&.\--cover {
+		height: 100%;
 		[x-image] {
 			position: absolute;
 			height: 100%;
