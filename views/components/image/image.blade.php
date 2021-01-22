@@ -87,7 +87,7 @@ if ($Ximage->responsive) {
 
 @endphp
 
-<div class="component--x-image {{ $Ximage->xclass }}" style="{!! $Ximage->xstyle !!}" @if($Ximage->id) id="{{ $Ximage->id }}" @endif>
+<div class="component--x-image {{ $Ximage->xclass }}" style="{!! $Ximage->xstyle !!}" @if($Ximage->id) id="{{ $Ximage->id }}" @endif x-image-container>
 	@if($Ximage->cover)
 		<div x-image x-cover {!! $Ximage->xattr !!}></div>
 	@else
@@ -104,7 +104,7 @@ if ($Ximage->responsive) {
 
 	$w.xImgs = function() {
 	    if (!$w.xItems.length) {
-			var q = $d.querySelectorAll('.component--x-image > [x-image]'); // IE breaks with '--';
+			var q = $d.querySelectorAll('[x-image-container] > [x-image]'); // IE breaks with '--';
 			[].forEach.call(q,function(el,i){
 				$w.xItems[i] = {};
 				$w.xItems[i].el = el;
@@ -199,7 +199,7 @@ if ($Ximage->responsive) {
 </x-script>
 
 <x-style>
-.component--x-image {
+[x-image-container] {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
