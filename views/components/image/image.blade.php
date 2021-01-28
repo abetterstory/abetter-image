@@ -68,6 +68,7 @@ foreach ($Ximage->vars AS $key => $val) {
 if ($Ximage->responsive && !empty($Ximage->service)) {
 	foreach ($Ximage->vars AS $prop => $x) {
 		if (!preg_match('/^--x-\d+/',$prop)) continue;
+		$x = trim($x,';');
 		$src = str_replace('/x','/'.$x,$Ximage->service);
 		$Ximage->xset .= "{$prop}:{$src}; ";
 	}
