@@ -10,7 +10,8 @@
     ],
     "require": {
 		"abetter/core": "^1.0",
-		"abetter/mockup": "^1.0"
+		"abetter/mockup": "^1.0",
+		"tinify/tinify": "^1.5"
 	},
 	"autoload": {
 		"psr-4": {
