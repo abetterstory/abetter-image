@@ -3,6 +3,7 @@
 namespace ABetter\Image;
 
 use Imagick;
+use Tinify;
 use ABetter\Mockup\Pixsum;
 //use Illuminate\Database\Eloquent\Model AS BaseModel;
 
@@ -113,7 +114,8 @@ class Image {
 
 	public static function cachekey($opt=[]) {
 		$cachekey = trim(str_replace(['/'],['.'],$opt['domain'].$opt['path'].$opt['filename']),'.');
-		return preg_replace('/\.[^.\s]{3,4}$/','',$cachekey);
+		return preg_replace('/\.(jpeg|jpg|png|gif)$/','',$cachekey);
+		// return preg_replace('/\.[^.\s]{3,4}$/','',$cachekey);
 	}
 
 	// ---
@@ -168,7 +170,7 @@ class Image {
 		return $opt;
 	}
 
-	// ----
+	// ---
 
 	public static function imagick($source,$target,$type,$style) {
 		if (!is_file($source) || preg_match('/\.error/',$source)) return NULL;
@@ -189,6 +191,7 @@ class Image {
 			$imagick->stripImage();
 			$imagick->writeImage($target);
 			$imagick->clear();
+			self::compress($target);
 			return TRUE;
 		} catch(Exception $e) {
 			return FALSE;
@@ -329,5 +332,17 @@ class Image {
 		// ---
 		return $style;
 	}
+
+	// ---
+
+	public static function compress($target) {
+		if (!$key = env('TINIFY_KEY')) return NULL;
+		Tinify\setKey($key);
+		$source = Tinify\fromFile($target);
+		$source->toFile($target);
+		return TRUE;
+	}
+
+	// ---
 
 }
