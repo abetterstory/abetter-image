@@ -58,8 +58,8 @@ class Image {
 		if ($opt['return'] == 'file') return $opt['target'];
 		if ($opt['return'] == 'src') return self::public($opt);
 		if ($opt['return'] == 'service') return self::service($opt);
-		$opt['service'] = self::service($opt);
 		$opt['src'] = self::public($opt);
+		$opt['service'] = self::service($opt);
 		$opt['file'] = $opt['target'];
 		$opt['color'] = self::color($opt);
 		$opt['dimensions'] = self::dimensions($opt);
@@ -107,6 +107,7 @@ class Image {
 	}
 
 	public static function service($opt=[]) {
+		if ($opt['remote']) return '/_image/x'.$opt['src'];
 		return '/_image/x'.$opt['path'].$opt['filename'].'.'.$opt['type'];
 	}
 
