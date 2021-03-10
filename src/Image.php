@@ -55,6 +55,7 @@ class Image {
 				);
 			}
 		}
+		$opt['target'] = (is_file($opt['target'])) ? $opt['target'] : NULL;
 		if ($opt['return'] == 'file') return $opt['target'];
 		if ($opt['return'] == 'src') return self::public($opt);
 		if ($opt['return'] == 'service') return self::service($opt);
@@ -67,6 +68,7 @@ class Image {
 	}
 
 	public static function color($opt) {
+		if (!is_file($opt['target'])) return "";
 		if (preg_match('/color\-([^.]{3,6})/',$opt['filename'],$match)) {
 			return "#".$match[1];
 		}
@@ -103,10 +105,12 @@ class Image {
 	}
 
 	public static function public($opt=[]) {
+		if (!is_file($opt['target'])) return NULL;
 		return str_replace(storage_path(),'',$opt['target']);
 	}
 
 	public static function service($opt=[]) {
+		if (!is_file($opt['target'])) return NULL;
 		if ($opt['remote']) return '/_image/x'.$opt['src'];
 		return '/_image/x'.$opt['path'].$opt['filename'].'.'.$opt['type'];
 	}

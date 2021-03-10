@@ -76,7 +76,10 @@ if ($Ximage->responsive && !empty($Ximage->service)) {
 
 // ---
 
-if ($Ximage->responsive) {
+if (!$Ximage->target) {
+	$Ximage->xattr = '';
+	$Ximage->xclass .= ' --ready';
+} else if ($Ximage->responsive) {
 	$Ximage->xattr = 'x-set="'.$Ximage->xset.'"';
 } else if ($Ximage->lazy) {
 	$Ximage->xattr = 'x-src="'.$Ximage->src.'"';
@@ -89,10 +92,14 @@ if ($Ximage->responsive) {
 @endphp
 
 <div class="component--x-image {{ $Ximage->xclass }}" style="{!! $Ximage->xstyle !!}" @if($Ximage->id) id="{{ $Ximage->id }}" @endif x-image-container>
-	@if($Ximage->cover)
-		<div x-image x-cover {!! $Ximage->xattr !!}></div>
+	@if($Ximage->xattr)
+		@if($Ximage->cover)
+			<div x-image x-cover {!! $Ximage->xattr !!}></div>
+		@else
+			<img x-image {!! $Ximage->xattr !!} />
+		@endif
 	@else
-		<img x-image {!! $Ximage->xattr !!} />
+		<!--missing-x-image:{{ $Ximage->filename }}-->
 	@endif
 	<div x-overlay><div x-shade></div></div>
 
@@ -302,7 +309,7 @@ if ($Ximage->responsive) {
 		opacity: 0; //IE11
 		opacity: var(--fade);
 		height: 120%;
-		background: linear-gradient(var(--overlay), transparent 100px, transparent 20%, transparent 60%, var(--overlay));
+		background: linear-gradient(var(--overlay), transparent 150px, transparent 20%, transparent 60%, var(--overlay) 90%, var(--overlay) 120%);
 	}
 	&.\--multiply {
 		[x-overlay],
