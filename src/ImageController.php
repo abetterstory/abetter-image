@@ -29,10 +29,10 @@ class ImageController extends BaseController {
 			return abort(404);
 		}
 
-		$GLOBALS['HEADERS']['expire'] = $this->image['expire'];
-		$GLOBALS['HEADERS']['modified'] = @filemtime($this->image['location']);
-
-		return response()->file($this->image['file']);
+		return response()->file($this->image['file'],_cache_headers([
+			'expire' => $this->image['expire'],
+			'modified' => @filemtime($this->image['location']),
+		]));
 
 	}
 

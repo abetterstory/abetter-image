@@ -29,10 +29,10 @@ class CacheController extends BaseController {
 			return abort(404);
 		}
 
-		$GLOBALS['HEADERS']['expire'] = $this->cache['expire'];
-		$GLOBALS['HEADERS']['modified'] = @filemtime($this->cache['location']);
-
-		return response()->file($this->cache['file']);
+		return response()->file($this->cache['file'],_cache_headers([
+			'expire' => $this->cache['expire'],
+			'modified' => @filemtime($this->cache['location']),
+		]));
 
 	}
 
