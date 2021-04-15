@@ -95,6 +95,10 @@ class Image {
 			$source = $opt['storage'].'/'.$opt['cachekey'].'.'.$opt['type'];
 			if ($content = @file_get_contents($opt['remote'])) {
 				@file_put_contents($source,$content);
+				if (!self::isType($source,$opt['type'])) {
+					@unlink($source);
+					$source = NULL;
+				}
 			}
 		}
 		return $source;
@@ -115,6 +119,11 @@ class Image {
 		return '/_image/x'.$opt['path'].$opt['filename'].'.'.$opt['type'];
 	}
 
+	public static function isType($target,$type) {
+		$mime = self::format($type,FALSE,FALSE);
+		return ($mime && $mime == mime_content_type($target)) ? TRUE : FALSE;
+	}
+
 	// ---
 
 	public static function cachekey($opt=[]) {
@@ -129,15 +138,19 @@ class Image {
 		return self::format(($headers = @get_headers($url,1)) ? $headers['Content-Type']??"" : "image/jpeg",TRUE);
 	}
 
-	public static function format($ext,$reverse=FALSE) {
+	public static function format($ext,$reverse=FALSE,$default=TRUE) {
 		$formats = [
 			'jpeg' => 'image/jpeg',
 			'jpg' => 'image/jpeg',
 			'png' => 'image/png',
 			'gif' => 'image/gif',
+			'mp4' => 'video/mp4',
+			'mpeg' => 'video/mpeg',
+			'htm' => 'text/html',
+			'html' => 'text/html',
 		];
 		$formats = ($reverse) ? array_flip($formats) : $formats;
-		return $formats[$ext] ?? reset($formats);
+		return $formats[$ext] ?? (($default) ? reset($formats) : NULL);
 	}
 
 	// ---
